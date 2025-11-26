@@ -1,0 +1,220 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Blockchain Vulnerability Demo - .gitignore
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Node.js / npm
+# ───────────────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-debug.log*
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Hardhat
+# ───────────────────────────────────────────────────────────────────────────────
+cache/
+artifacts/
+typechain/
+typechain-types/
+coverage/
+coverage.json
+.openzeppelin/
+
+# Hardhat specific
+hardhat.config.ts
+hardhat.config.js
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Foundry / Forge
+# ───────────────────────────────────────────────────────────────────────────────
+out/
+cache_forge/
+broadcast/
+lib/
+
+# Foundry specific
+foundry.toml
+remappings.txt
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Truffle
+# ───────────────────────────────────────────────────────────────────────────────
+build/
+truffle-config.js
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Environment Variables & Secrets
+# ───────────────────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+
+# Private keys (NEVER commit these!)
+*.key
+*.pem
+private-keys.txt
+mnemonic.txt
+seed-phrase.txt
+
+# API keys
+api-keys.txt
+infura-key.txt
+alchemy-key.txt
+
+# ───────────────────────────────────────────────────────────────────────────────
+# IDEs and Editors
+# ───────────────────────────────────────────────────────────────────────────────
+
+# VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Operating Systems
+# ───────────────────────────────────────────────────────────────────────────────
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Testing & Coverage
+# ───────────────────────────────────────────────────────────────────────────────
+test-results/
+coverage/
+.nyc_output/
+*.lcov
+
+# Gas reports
+gas-report.txt
+gasReporterOutput.json
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Logs
+# ───────────────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Deployment & Build Artifacts
+# ───────────────────────────────────────────────────────────────────────────────
+deployments/
+deployed-addresses.json
+deployment-*.json
+contract-addresses.txt
+
+# Compiled contracts
+*.abi
+*.bin
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Frontend / React (if you add a frontend)
+# ───────────────────────────────────────────────────────────────────────────────
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Documentation Build
+# ───────────────────────────────────────────────────────────────────────────────
+docs/build/
+site/
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Temporary Files
+# ───────────────────────────────────────────────────────────────────────────────
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Security & Audit Reports (optional - you may want to commit these)
+# ───────────────────────────────────────────────────────────────────────────────
+# audit-report.pdf
+# security-analysis.md
+# slither-report.json
+# mythril-report.txt
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Optional: Keep certain files tracked
+# ───────────────────────────────────────────────────────────────────────────────
+# Remove the # to track these files:
+# !.env.example
+# !hardhat.config.example.js
+# !foundry.toml.example
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Project Specific
+# ───────────────────────────────────────────────────────────────────────────────
+# Add any project-specific files to ignore here
+
+# Local testing addresses
+local-addresses.json
+test-addresses.json
+
+# Personal notes (if you don't want to commit them)
+NOTES.md
+TODO.personal.md
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# End of .gitignore
+# ═══════════════════════════════════════════════════════════════════════════════

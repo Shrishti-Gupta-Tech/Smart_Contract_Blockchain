@@ -3,135 +3,344 @@ pragma solidity ^0.8.0;
 
 /**
  * @title VulnerableContract
- * @notice This contract demonstrates the "Unchecked External Call Return Values" vulnerability
+ * @author Educational Project - Blockchain Security Demo
+ * @notice This contract intentionally demonstrates the "Unchecked External Call Return Values" vulnerability (SWC-104)
+ * @dev ⚠️ WARNING: This contract is INTENTIONALLY VULNERABLE for educational purposes. NEVER use in production!
  * 
- * VULNERABILITY EXPLANATION:
- * =========================
- * This contract uses low-level calls (.call, .send) to transfer Ether but does NOT check
- * if these calls succeeded or failed. This creates several critical issues:
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * VULNERABILITY CLASSIFICATION
+ * ═══════════════════════════════════════════════════════════════════════════════
  * 
- * 1. SILENT FAILURES: If the external call fails (e.g., recipient rejects, out of gas),
- *    the function continues execution as if nothing went wrong.
+ * Name:     Unchecked External Call Return Values
+ * SWC-ID:   SWC-104
+ * Severity: HIGH
+ * Category: Error Handling / Input Validation
  * 
- * 2. STATE INCONSISTENCY: The contract updates its internal state (balance tracking)
- *    even when the actual Ether transfer fails.
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * WHAT IS THIS VULNERABILITY?
+ * ═══════════════════════════════════════════════════════════════════════════════
  * 
- * 3. LOSS OF FUNDS: Users may believe their withdrawal succeeded when it actually failed,
- *    leading to confusion and potential loss of funds.
+ * In Solidity, when you send Ether using low-level functions like:
+ * - .send()         → Returns: bool (true/false)
+ * - .call{value}()  → Returns: (bool success, bytes memory data)
+ * - .delegatecall() → Returns: (bool success, bytes memory data)
  * 
- * 4. EXPLOITATION RISK: Malicious actors can exploit this by creating contracts that
- *    intentionally fail to receive Ether, causing accounting errors.
+ * These functions DO NOT automatically revert on failure. Instead, they return
+ * a boolean value indicating success or failure. If you ignore this return value,
+ * your contract will continue executing even when the transfer fails!
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * WHY IS THIS DANGEROUS?
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * 1. 🔇 SILENT FAILURES
+ *    - Transfer fails but no error is thrown
+ *    - User thinks transaction succeeded
+ *    - No indication something went wrong
+ * 
+ * 2. 💔 STATE INCONSISTENCY  
+ *    - Contract state updates (e.g., balance -= amount)
+ *    - But actual Ether transfer fails
+ *    - Accounting becomes incorrect
+ *    - Real balance ≠ Tracked balance
+ * 
+ * 3. 💸 LOSS OF FUNDS
+ *    - User's tracked balance decreases
+ *    - But Ether stays stuck in contract
+ *    - Funds become unrecoverable
+ *    - Users lose money permanently
+ * 
+ * 4. 🎯 EXPLOITATION VECTOR
+ *    - Malicious contracts can reject payments intentionally
+ *    - Attackers can manipulate contract state
+ *    - Creates accounting errors that benefit attackers
+ *    - Can be used in complex attack chains
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * REAL-WORLD IMPACT
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * Historical Examples:
+ * - King of the Ether Throne: Users got stuck, couldn't claim throne
+ * - Various ICO contracts: Users lost ETH during token distribution
+ * - Multiple DeFi protocols: Funds locked due to failed transfers
+ * 
+ * Financial Impact:
+ * - Millions of dollars lost across various projects
+ * - Reputation damage to affected projects
+ * - User trust erosion in blockchain ecosystem
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * HOW TO EXPLOIT THIS CONTRACT (For Educational Testing)
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * Step 1: Deploy VulnerableContract
+ * Step 2: Deploy MaliciousReceiver (a contract that rejects payments)
+ * Step 3: Deposit Ether into VulnerableContract
+ * Step 4: Call makePayment() with MaliciousReceiver address
+ * Step 5: Observe: Transaction succeeds but Ether is stuck!
+ * 
+ * Result: Your balance tracking shows deduction, but Ether never left!
  */
 
 contract VulnerableContract {
     
-    // Mapping to track user balances
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // STATE VARIABLES
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @dev Mapping to track each user's Ether balance in the contract
+     * @notice This is our "accounting ledger" - it tracks who owns what
+     * 
+     * Key Concept for Beginners:
+     * - Mapping is like a database table: address → balance
+     * - Each user's address maps to their balance (in wei)
+     * - 1 Ether = 1,000,000,000,000,000,000 wei (18 decimals)
+     * 
+     * Why we track balances:
+     * - Users can deposit Ether and withdraw later
+     * - We need to know how much each user has deposited
+     * - This allows for more complex logic than just .transfer()
+     * 
+     * ⚠️ THE VULNERABILITY RISK:
+     * If external calls fail but we don't check, this mapping becomes
+     * incorrect (shows deductions that never happened in reality)
+     */
     mapping(address => uint256) public balances;
     
-    // Events
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EVENTS
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * @dev Emitted when a user deposits Ether into the contract
+     * @param user The address of the user making the deposit
+     * @param amount The amount of Ether deposited (in wei)
+     * 
+     * Events Explanation for Beginners:
+     * - Events are like "logs" on the blockchain
+     * - They allow external applications (dApps) to track what happened
+     * - Events are cheaper than storing data in contract state
+     * - You can search for events on blockchain explorers (like Etherscan)
+     */
     event Deposit(address indexed user, uint256 amount);
+    
+    /**
+     * @dev Emitted when a withdrawal is attempted (whether successful or not!)
+     * @param user The address attempting to withdraw
+     * @param amount The amount attempting to be withdrawn
+     * 
+     * ⚠️ VULNERABILITY INDICATOR:
+     * This event name is misleading! It says "Attempted" which suggests
+     * it might fail, but users might interpret it as successful.
+     * Better name: "WithdrawalInitiated" or just "Withdrawal"
+     */
     event WithdrawalAttempted(address indexed user, uint256 amount);
+    
+    /**
+     * @dev Emitted when a payment is attempted to another address
+     * @param recipient The address receiving the payment
+     * @param amount The amount being sent
+     * 
+     * ⚠️ VULNERABILITY INDICATOR:
+     * Same issue - "Attempted" doesn't clearly indicate success/failure.
+     * The event fires even when payment fails!
+     */
     event PaymentAttempted(address indexed recipient, uint256 amount);
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FUNCTIONS - SAFE (No vulnerability)
+    // ═══════════════════════════════════════════════════════════════════════════════
     
     /**
      * @notice Allows users to deposit Ether into the contract
+     * @dev This function is SAFE - it doesn't have the vulnerability
+     * 
+     * Function Modifiers Explained:
+     * - public:  Anyone can call this function
+     * - payable: This function can receive Ether
+     * 
+     * How it works:
+     * 1. User sends Ether when calling this function
+     * 2. We validate they sent more than 0 (using require)
+     * 3. We update their balance in our mapping
+     * 4. We emit an event for tracking
+     * 
+     * Key Concepts:
+     * - msg.value = Amount of Ether sent (in wei)
+     * - msg.sender = Address of the caller
+     * - require() = If condition fails, revert everything
+     * 
+     * Why this is SAFE:
+     * - No external calls made
+     * - No return values to check
+     * - Simple state update
+     * - Follows Checks-Effects pattern
      */
     function deposit() public payable {
+        // CHECK: Validate input
         require(msg.value > 0, "Must send Ether");
+        
+        // EFFECT: Update state
         balances[msg.sender] += msg.value;
+        
+        // LOG: Emit event for off-chain tracking
         emit Deposit(msg.sender, msg.value);
     }
     
-    /**
-     * @notice VULNERABLE FUNCTION #1: Withdraw using .send()
-     * 
-     * THE VULNERABILITY:
-     * -----------------
-     * The .send() function returns a boolean (true/false) but we're NOT checking it!
-     * If the send fails (e.g., recipient is a contract that rejects payments, or
-     * runs out of gas), the function will:
-     * 1. Still deduct the balance from the user's account
-     * 2. Emit the event as if withdrawal succeeded
-     * 3. Return normally without reverting
-     * 
-     * RESULT: User loses their balance tracking but doesn't receive the Ether!
-     */
-    function withdrawWithSend() public {
-        uint256 amount = balances[msg.sender];
-        require(amount > 0, "No balance to withdraw");
-        
-        // VULNERABILITY: We update state BEFORE the external call (bad pattern)
-        // and we DON'T check if send() succeeded!
-        balances[msg.sender] = 0;
-        
-        // This send() might fail, but we ignore the return value
-        payable(msg.sender).send(amount);  // ❌ UNCHECKED RETURN VALUE!
-        
-        emit WithdrawalAttempted(msg.sender, amount);
-    }
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // VULNERABLE FUNCTIONS - ⚠️ THESE DEMONSTRATE THE SECURITY FLAW
+    // ═══════════════════════════════════════════════════════════════════════════════
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/**
+ * @title VulnerableContract
+ * @author Educational Project - Blockchain Security Demo
+ * @notice This contract intentionally demonstrates the "Unchecked External Call Return Values" vulnerability (SWC-104)
+ * @dev ⚠️ WARNING: This contract is INTENTIONALLY VULNERABLE for educational purposes. NEVER use in production!
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * VULNERABILITY CLASSIFICATION
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * Name:     Unchecked External Call Return Values
+ * SWC-ID:   SWC-104
+ * Severity: HIGH
+ * Category: Error Handling / Input Validation
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * WHAT IS THIS VULNERABILITY?
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * In Solidity, when you send Ether using low-level functions like:
+ * - .send()         → Returns: bool (true/false)
+ * - .call{value}()  → Returns: (bool success, bytes memory data)
+ * - .delegatecall() → Returns: (bool success, bytes memory data)
+ * 
+ * These functions DO NOT automatically revert on failure. Instead, they return
+ * a boolean value indicating success or failure. If you ignore this return value,
+ * your contract will continue executing even when the transfer fails!
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * WHY IS THIS DANGEROUS?
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * 1. 🔇 SILENT FAILURES
+ *    - Transfer fails but no error is thrown
+ *    - User thinks transaction succeeded
+ *    - No indication something went wrong
+ * 
+ * 2. 💔 STATE INCONSISTENCY  
+ *    - Contract state updates (e.g., balance -= amount)
+ *    - But actual Ether transfer fails
+ *    - Accounting becomes incorrect
+ *    - Real balance ≠ Tracked balance
+ * 
+ * 3. 💸 LOSS OF FUNDS
+ *    - User's tracked balance decreases
+ *    - But Ether stays stuck in contract
+ *    - Funds become unrecoverable
+ *    - Users lose money permanently
+ * 
+ * 4. 🎯 EXPLOITATION VECTOR
+ *    - Malicious contracts can reject payments intentionally
+ *    - Attackers can manipulate contract state
+ *    - Creates accounting errors that benefit attackers
+ *    - Can be used in complex attack chains
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * REAL-WORLD IMPACT
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * Historical Examples:
+ * - King of the Ether Throne: Users got stuck, couldn't claim throne
+ * - Various ICO contracts: Users lost ETH during token distribution
+ * - Multiple DeFi protocols: Funds locked due to failed transfers
+ * 
+ * Financial Impact:
+ * - Millions of dollars lost across various projects
+ * - Reputation damage to affected projects
+ * - User trust erosion in blockchain ecosystem
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * HOW TO EXPLOIT THIS CONTRACT (For Educational Testing)
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * Step 1: Deploy VulnerableContract
+ * Step 2: Deploy MaliciousReceiver (a contract that rejects payments)
+ * Step 3: Deposit Ether into VulnerableContract
+ * Step 4: Call makePayment() with MaliciousReceiver address
+ * Step 5: Observe: Transaction succeeds but Ether is stuck!
+ * 
+ * Result: Your balance tracking shows deduction, but Ether never left!
+ */
+
+contract VulnerableContract {
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // STATE VARIABLES
+    // ═══════════════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice VULNERABLE FUNCTION #2: Payment using .call()
+     * @dev Mapping to track each user's Ether balance in the contract
+     * @notice This is our "accounting ledger" - it tracks who owns what
+     * Key Concept for Beginners:
+     * - Mapping is like a database table: address → balance
+     * - Each user's address maps to their balance (in wei)
+     * - 1 Ether = 1,000,000,000,000,000,000 wei (18 decimals)
      * 
-     * THE VULNERABILITY:
-     * -----------------
-     * The .call{value: x}() returns (bool success, bytes memory data) but we're
-     * NOT capturing or checking these return values!
+     * Why we track balances:
+     * - Users can deposit Ether and withdraw later
+     * - We need to know how much each user has deposited
+     * - This allows for more complex logic than just .transfer()
      * 
-     * This is even more dangerous because:
-     * 1. .call() forwards all available gas (unlike send which limits to 2300 gas)
-     * 2. Failure is completely silent
-     * 3. Can be exploited more easily by malicious contracts
+     * ⚠️ THE VULNERABILITY RISK:
+     * If external calls fail but we don't check, this mapping becomes
+     * incorrect (shows deductions that never happened in reality)
      */
-    function makePayment(address payable recipient, uint256 amount) public {
-        require(balances[msg.sender] >= amount, "Insufficient balance");
-        require(recipient != address(0), "Invalid recipient");
-        
-        // VULNERABILITY: State updated before external call and return value not checked
-        balances[msg.sender] -= amount;
-        
-        // This call() might fail, but we completely ignore the return values!
-        recipient.call{value: amount}("");  // ❌ UNCHECKED RETURN VALUE!
-        
-        emit PaymentAttempted(recipient, amount);
-    }
+    mapping(address => uint256) public balances;
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // EVENTS
+    // ═══════════════════════════════════════════════════════════════════════════════
     
     /**
-     * @notice VULNERABLE FUNCTION #3: Batch payment vulnerability
+     * @dev Emitted when a user deposits Ether into the contract
+     * @param user The address of the user making the deposit
+     * @param amount The amount of Ether deposited (in wei)
      * 
-     * THE VULNERABILITY:
-     * -----------------
-     * When one payment in a batch fails, the contract continues processing
-     * without reverting, leading to partial failures that are undetected.
+     * Events Explanation for Beginners:
+     * - Events are like "logs" on the blockchain
+     * - They allow external applications (dApps) to track what happened
+     * - Events are cheaper than storing data in contract state
+     * - You can search for events on blockchain explorers (like Etherscan)
      */
-    function batchPayment(address payable[] memory recipients, uint256[] memory amounts) public {
-        require(recipients.length == amounts.length, "Array length mismatch");
-        
-        uint256 totalAmount = 0;
-        for (uint256 i = 0; i < amounts.length; i++) {
-            totalAmount += amounts[i];
-        }
-        
-        require(balances[msg.sender] >= totalAmount, "Insufficient balance");
-        balances[msg.sender] -= totalAmount;
-        
-        // VULNERABILITY: If any payment fails, we don't know and don't revert!
-        for (uint256 i = 0; i < recipients.length; i++) {
-            recipients[i].call{value: amounts[i]}("");  // ❌ UNCHECKED!
-        }
-    }
+    event Deposit(address indexed user, uint256 amount);
     
     /**
-     * @notice View function to check contract balance
+     * @dev Emitted when a withdrawal is attempted (whether successful or not!)
+     * @param user The address attempting to withdraw
+     * @param amount The amount attempting to be withdrawn
+     * 
+     * ⚠️ VULNERABILITY INDICATOR:
+     * This event name is misleading! It says "Attempted" which suggests
+     * it might fail, but users might interpret it as successful.
+     * Better name: "WithdrawalInitiated" or just "Withdrawal"
      */
-    function getContractBalance() public view returns (uint256) {
-        return address(this).balance;
-    }
+    event WithdrawalAttempted(address indexed user, uint256 amount);
     
     /**
-     * @notice View function to check user balance
+     * @dev Emitted when a payment is attempted to another address
+     * @param recipient The address receiving the payment
+     * @param amount The amount being sent
+     * 
+     * ⚠️ VULNERABILITY INDICATOR:
+     * Same issue - "Attempted" doesn't clearly indicate success/failure.
+     * The event fires even when payment fails!
      */
-    function getUserBalance(address user) public view returns (uint256) {
-        return balances[user];
-    }
-}
+    event PaymentAttempted(address indexed recipient, uint256 amount);
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FUNCTIONS - SAFE (No vulnerability)
