@@ -19,11 +19,11 @@
 
 ### Which Method Should You Use?
 
-| Method | Difficulty | Best For | Setup Time |
-|--------|-----------|----------|------------|
-| **Remix IDE** | ⭐ Easiest | Beginners, quick testing | 5 min |
-| **Hardhat** | ⭐⭐ Medium | Professional development | 15 min |
-| **Foundry** | ⭐⭐⭐ Advanced | Fast testing, optimization | 10 min |
+| Method        | Difficulty      | Best For                   | Setup Time |
+| ------------- | --------------- | -------------------------- | ---------- |
+| **Remix IDE** | ⭐ Easiest      | Beginners, quick testing   | 5 min      |
+| **Hardhat**   | ⭐⭐ Medium     | Professional development   | 15 min     |
+| **Foundry**   | ⭐⭐⭐ Advanced | Fast testing, optimization | 10 min     |
 
 **Recommendation:** Start with Remix, then try Hardhat/Foundry as you advance.
 
@@ -32,24 +32,27 @@
 ## 📱 Method 1: Remix IDE (Easiest)
 
 ### Prerequisites
+
 - Web browser
 - MetaMask (for testnet deployment)
 
 ### Step-by-Step Instructions
 
 #### 1. Open Remix
+
 Visit: https://remix.ethereum.org
 
 #### 2. Upload Contracts
+
 - Click **File Explorer** (📁 icon)
 - Click **Upload** button
-- Select all 4 `.sol` files:
-  - VulnerableContract.sol
-  - FixedContract_RequireCheck.sol
-  - FixedContract_RevertPattern.sol
-  - MaliciousReceiver.sol
+- Select all 3 `.sol` files:
+  - Vulnerable.sol
+  - Fix1_CheckedCall.sol
+  - Fix2_SafeWrapper.sol
 
 #### 3. Compile Contracts
+
 - Click **Solidity Compiler** tab (left sidebar)
 - Select compiler version: **0.8.0+**
 - Click **"Compile"** for each contract
@@ -58,6 +61,7 @@ Visit: https://remix.ethereum.org
 #### 4. Deploy
 
 **For Free Testing (Remix VM):**
+
 1. Go to **"Deploy & Run"** tab
 2. Select Environment: **"Remix VM (Shanghai)"**
 3. Deploy each contract:
@@ -67,6 +71,7 @@ Visit: https://remix.ethereum.org
 4. ✅ You get unlimited free test ETH!
 
 **For Real Testnet (Sepolia):**
+
 1. Install and setup MetaMask
 2. Switch to Sepolia network
 3. Get test ETH from faucet: https://sepoliafaucet.com
@@ -80,25 +85,27 @@ Visit: https://remix.ethereum.org
    - Copy contract address
 
 #### 5. Save Addresses
+
 Copy all 4 contract addresses and save them:
 
 ```
 Deployment on [Network] - [Date]
 
-VulnerableContract:          0x...
-MaliciousReceiver:           0x...
-FixedContract_RequireCheck:  0x...
-FixedContract_RevertPattern: 0x...
+Vulnerable:                0x...
+Fix1_CheckedCall:          0x...
+Fix2_SafeWrapper:          0x...
 ```
 
 #### 6. Test!
-Follow the testing guide in TESTING.md
+
+Follow the testing guide in README.md
 
 ---
 
 ## 💻 Method 2: Hardhat (Most Popular)
 
 ### Prerequisites
+
 - Node.js installed (v16+)
 - npm or yarn
 - Code editor (VS Code recommended)
@@ -149,33 +156,33 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }
+        runs: 200,
+      },
+    },
   },
   networks: {
     // Local network
     localhost: {
-      url: "http://127.0.0.1:8545"
+      url: "http://127.0.0.1:8545",
     },
-    
+
     // Sepolia testnet
     sepolia: {
       url: process.env.SEPOLIA_RPC_URL || "",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 11155111
+      chainId: 11155111,
     },
-    
+
     // For testing only - Hardhat network
     hardhat: {
-      chainId: 31337
-    }
+      chainId: 31337,
+    },
   },
   etherscan: {
     apiKey: {
-      sepolia: process.env.ETHERSCAN_API_KEY || ""
-    }
-  }
+      sepolia: process.env.ETHERSCAN_API_KEY || "",
+    },
+  },
 };
 ```
 
@@ -200,11 +207,11 @@ ETHERSCAN_API_KEY=your-etherscan-api-key
 #### 5. Copy Contracts
 
 Copy all `.sol` files to `contracts/` directory:
+
 ```bash
-cp VulnerableContract.sol contracts/
-cp FixedContract_RequireCheck.sol contracts/
-cp FixedContract_RevertPattern.sol contracts/
-cp MaliciousReceiver.sol contracts/
+cp Vulnerable.sol contracts/
+cp Fix1_CheckedCall.sol contracts/
+cp Fix2_SafeWrapper.sol contracts/
 ```
 
 #### 6. Copy Deployment Script
@@ -214,6 +221,7 @@ Copy `scripts/deploy.js` to your Hardhat project
 #### 7. Deploy
 
 **To local network:**
+
 ```bash
 # Start local node (in separate terminal)
 npx hardhat node
@@ -223,6 +231,7 @@ npx hardhat run scripts/deploy.js --network localhost
 ```
 
 **To Sepolia testnet:**
+
 ```bash
 npx hardhat run scripts/deploy.js --network sepolia
 ```
@@ -238,6 +247,7 @@ npx hardhat verify --network sepolia CONTRACT_ADDRESS
 ## ⚡ Method 3: Foundry (Fastest)
 
 ### Prerequisites
+
 - Foundry installed
 - Code editor
 - MetaMask (for testnet)
@@ -267,10 +277,9 @@ rm -rf src/Counter.sol test/Counter.t.sol script/Counter.s.sol
 
 ```bash
 # Copy contract files to src/
-cp VulnerableContract.sol src/
-cp FixedContract_RequireCheck.sol src/
-cp FixedContract_RevertPattern.sol src/
-cp MaliciousReceiver.sol src/
+cp Vulnerable.sol src/
+cp Fix1_CheckedCall.sol src/
+cp Fix2_SafeWrapper.sol src/
 
 # Copy deployment script
 cp scripts/Deploy.s.sol script/
@@ -295,12 +304,14 @@ source .env
 #### 6. Deploy
 
 **Dry run (simulation):**
+
 ```bash
 forge script script/Deploy.s.sol:DeployScript \
   --rpc-url $SEPOLIA_RPC_URL
 ```
 
 **Deploy to Sepolia:**
+
 ```bash
 forge script script/Deploy.s.sol:DeployScript \
   --rpc-url $SEPOLIA_RPC_URL \
@@ -310,6 +321,7 @@ forge script script/Deploy.s.sol:DeployScript \
 ```
 
 **Deploy to local Anvil:**
+
 ```bash
 # Start Anvil (in separate terminal)
 anvil
@@ -328,6 +340,7 @@ forge script script/Deploy.s.sol:DeployScript \
 ### Sepolia Testnet (Recommended)
 
 **Network Details:**
+
 ```
 Name: Sepolia
 Chain ID: 11155111
@@ -336,11 +349,13 @@ Explorer: https://sepolia.etherscan.io
 ```
 
 **Get Test ETH:**
+
 - https://sepoliafaucet.com
 - https://faucet.sepolia.dev
 - https://www.infura.io/faucet/sepolia
 
 **Infura/Alchemy Setup:**
+
 1. Create account at Infura.io or Alchemy.com
 2. Create new project
 3. Copy API key
@@ -349,6 +364,7 @@ Explorer: https://sepolia.etherscan.io
 ### Local Networks
 
 **Hardhat Network:**
+
 ```bash
 npx hardhat node
 # RPC: http://127.0.0.1:8545
@@ -356,6 +372,7 @@ npx hardhat node
 ```
 
 **Anvil (Foundry):**
+
 ```bash
 anvil
 # RPC: http://127.0.0.1:8545
@@ -363,6 +380,7 @@ anvil
 ```
 
 **Benefits of Local Networks:**
+
 - ✅ Instant transactions
 - ✅ Unlimited ETH
 - ✅ Fast testing
@@ -383,10 +401,9 @@ Create `deployed-addresses.json`:
   "chainId": 11155111,
   "timestamp": "2024-01-15T10:30:00Z",
   "contracts": {
-    "VulnerableContract": "0x...",
-    "MaliciousReceiver": "0x...",
-    "FixedContract_RequireCheck": "0x...",
-    "FixedContract_RevertPattern": "0x..."
+    "Vulnerable": "0x...",
+    "Fix1_CheckedCall": "0x...",
+    "Fix2_SafeWrapper": "0x..."
   }
 }
 ```
@@ -394,17 +411,20 @@ Create `deployed-addresses.json`:
 ### 2. Verify Contracts on Etherscan
 
 **Why Verify?**
+
 - ✅ Users can read your source code
 - ✅ Increases transparency and trust
 - ✅ Easier to interact with
 - ✅ Shows you're legitimate
 
 **Hardhat Verification:**
+
 ```bash
 npx hardhat verify --network sepolia CONTRACT_ADDRESS
 ```
 
 **Foundry Verification:**
+
 ```bash
 forge verify-contract CONTRACT_ADDRESS \
   ContractName \
@@ -414,7 +434,7 @@ forge verify-contract CONTRACT_ADDRESS \
 
 ### 3. Test Deployed Contracts
 
-Follow the testing guide in `TESTING.md`:
+Follow the testing guide in README.md:
 
 ```bash
 # Quick test in Remix
@@ -437,18 +457,20 @@ Create a deployment record:
 **Gas Used:** ~2,000,000
 
 ## Addresses
-- VulnerableContract: 0x...
-- MaliciousReceiver: 0x...
-- FixedContract_RequireCheck: 0x...
-- FixedContract_RevertPattern: 0x...
+
+- Vulnerable: 0x...
+- Fix1_CheckedCall: 0x...
+- Fix2_SafeWrapper: 0x...
 
 ## Verification
+
 - [x] All contracts verified on Etherscan
 - [x] Tested basic functionality
 - [x] Vulnerability demonstrated
 - [x] Fixes validated
 
 ## Notes
+
 - Used for educational workshop on [date]
 - Shared with [team/class]
 ```
@@ -479,25 +501,33 @@ Create a deployment record:
 ## 🐛 Troubleshooting
 
 ### "Insufficient funds for gas"
+
 **Solution:** Get more test ETH from faucet
 
 ### "Nonce too high"
+
 **Solution:** Reset MetaMask account or wait for pending transactions
 
 ### "Contract creation failed"
-**Solution:** 
+
+**Solution:**
+
 - Check gas limit
 - Verify RPC URL is correct
 - Ensure private key has funds
 
 ### "Network not supported"
-**Solution:** 
+
+**Solution:**
+
 - Add network to MetaMask manually
 - Check chainId is correct
 - Verify RPC URL
 
 ### "Cannot connect to network"
+
 **Solution:**
+
 - Check internet connection
 - Verify RPC URL is accessible
 - Try different RPC provider
@@ -507,6 +537,7 @@ Create a deployment record:
 ## 💡 Best Practices
 
 ### 1. Always Use Testnets First
+
 ```bash
 # ✅ GOOD - Testing on Sepolia
 npx hardhat run scripts/deploy.js --network sepolia
@@ -515,6 +546,7 @@ npx hardhat run scripts/deploy.js --network sepolia
 ```
 
 ### 2. Keep Private Keys Secure
+
 ```bash
 # ✅ GOOD - Using environment variables
 PRIVATE_KEY=0x... npx hardhat run scripts/deploy.js --network sepolia
@@ -524,18 +556,21 @@ const privateKey = "0x123..."; // NEVER DO THIS!
 ```
 
 ### 3. Verify Contracts
+
 ```bash
 # Makes your contract readable and trustworthy
 npx hardhat verify --network sepolia CONTRACT_ADDRESS
 ```
 
 ### 4. Document Everything
+
 - Save deployment addresses
 - Record deployment date
 - Note which network used
 - Keep transaction hashes
 
 ### 5. Test Before Sharing
+
 - Verify all functions work
 - Test the vulnerability
 - Confirm fixes work properly
@@ -549,10 +584,9 @@ npx hardhat verify --network sepolia CONTRACT_ADDRESS
 
 ```
 Contract Deployments:
-├── VulnerableContract:          ~500,000 gas (~0.005 ETH)
-├── MaliciousReceiver:           ~150,000 gas (~0.0015 ETH)
-├── FixedContract_RequireCheck:  ~520,000 gas (~0.0052 ETH)
-└── FixedContract_RevertPattern: ~515,000 gas (~0.0051 ETH)
+├── Vulnerable:                  ~500,000 gas (~0.005 ETH)
+├── Fix1_CheckedCall:            ~520,000 gas (~0.0052 ETH)
+└── Fix2_SafeWrapper:            ~515,000 gas (~0.0051 ETH)
 
 Total Estimated: ~1,685,000 gas (~0.017 ETH)
 
@@ -572,21 +606,25 @@ Note: Costs vary based on network congestion
 ### Sepolia Testnet
 
 **Faucets:**
+
 - https://sepoliafaucet.com
 - https://faucet.sepolia.dev
 - https://www.infura.io/faucet/sepolia
 
 **RPC Providers:**
+
 - **Infura:** https://infura.io
 - **Alchemy:** https://alchemy.com
 - **Public RPC:** https://rpc.sepolia.org
 
 **Block Explorer:**
+
 - https://sepolia.etherscan.io
 
 ### Local Development
 
 **Hardhat Network:**
+
 ```bash
 # Terminal 1: Start node
 npx hardhat node
@@ -596,6 +634,7 @@ npx hardhat run scripts/deploy.js --network localhost
 ```
 
 **Anvil (Foundry):**
+
 ```bash
 # Terminal 1: Start Anvil
 anvil
@@ -611,6 +650,7 @@ forge script script/Deploy.s.sol:DeployScript \
 ## 📱 Quick Reference Commands
 
 ### Remix IDE
+
 ```
 1. Open: https://remix.ethereum.org
 2. Upload contracts
@@ -621,6 +661,7 @@ forge script script/Deploy.s.sol:DeployScript \
 ```
 
 ### Hardhat
+
 ```bash
 # Compile
 npx hardhat compile
@@ -636,6 +677,7 @@ npx hardhat verify --network sepolia CONTRACT_ADDRESS
 ```
 
 ### Foundry
+
 ```bash
 # Compile
 forge build
@@ -655,6 +697,7 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 ## ⚠️ Important Warnings
 
 ### DO:
+
 - ✅ Deploy to testnets only
 - ✅ Keep private keys secure
 - ✅ Use environment variables
@@ -663,6 +706,7 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 - ✅ Document everything
 
 ### DON'T:
+
 - ❌ Deploy vulnerable contracts to mainnet
 - ❌ Share private keys
 - ❌ Commit .env files
@@ -675,16 +719,19 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 ## 🎓 Learning Resources
 
 ### Video Tutorials
+
 - Search YouTube: "How to deploy Solidity with Hardhat"
 - Search YouTube: "Foundry deployment tutorial"
 - Search YouTube: "Remix IDE smart contract deployment"
 
 ### Documentation
+
 - **Hardhat:** https://hardhat.org/getting-started
 - **Foundry:** https://book.getfoundry.sh
 - **Remix:** https://remix-ide.readthedocs.io
 
 ### Community Help
+
 - **Ethereum Stack Exchange:** https://ethereum.stackexchange.com
 - **Hardhat Discord:** https://hardhat.org/discord
 - **Foundry Telegram:** https://t.me/foundry_rs
@@ -694,6 +741,7 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 ## ✅ Deployment Checklist
 
 ### Pre-Deployment
+
 - [ ] Contracts compile without errors
 - [ ] Test ETH acquired (for testnet)
 - [ ] RPC URL configured
@@ -701,12 +749,14 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 - [ ] Network settings correct
 
 ### Deployment
-- [ ] All 4 contracts deployed
+
+- [ ] All contracts deployed
 - [ ] Transaction confirmations received
 - [ ] All addresses copied and saved
 - [ ] Gas costs documented
 
 ### Post-Deployment
+
 - [ ] Contracts verified on Etherscan
 - [ ] Basic functionality tested
 - [ ] Vulnerability demonstrated
@@ -714,11 +764,3 @@ forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify
 - [ ] Addresses shared with team
 
 ---
-
-**Ready to Deploy? 🚀**
-
-Choose your method and follow the steps above. Good luck!
-
----
-
-**Need Help?** Check the troubleshooting section or refer to TESTING.md for more details.
