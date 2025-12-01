@@ -58,6 +58,7 @@ blockchain-vulnerability-demo/
 │
 └── 📚 Documentation
     ├── Unchecked_External_Call_Assignment.md # Detailed assignment & analysis
+    ├── DEPLOYMENT.md                         # Deployment guide
     └── README.md                             # This guide
 ```
 
