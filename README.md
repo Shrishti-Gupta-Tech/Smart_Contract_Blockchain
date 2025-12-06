@@ -3,8 +3,6 @@
 ## Unchecked Return Values of Low-Level Calls (SWC-104)
 
 **Course:** Blockchain Technology & Smart Contracts  
-**Assignment:** Final Year Project / MTech Assignment
-
 ---
 
 ## 📌 Project Overview
@@ -41,18 +39,15 @@ This repository provides:
 
 ## 🚀 Quick Start
 
-### Option 1: Read the Report
 
-Open **[`Smart_Contract_Vulnerability_Report.md`](./Smart_Contract_Vulnerability_Report.md)** for the complete project documentation and analysis.
-
-### Option 2: Run in Remix IDE (Easiest)
+### Run in Remix IDE (Easiest)
 
 1.  Go to [Remix IDE](https://remix.ethereum.org).
 2.  Upload the `.sol` files.
 3.  Deploy `VulnerableRelayer` and `RevertingTarget`.
 4.  Test the exploit! (See Chapter 4 of the Report for details).
 
-### Option 3: Run Locally with Hardhat
+### Option 2: Run Locally with Hardhat
 
 1.  Install dependencies:
     ```bash
