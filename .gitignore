@@ -27,7 +27,7 @@ coverage.json
 
 # Hardhat specific
 hardhat.config.ts
-hardhat.config.js
+# hardhat.config.js
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Foundry / Forge

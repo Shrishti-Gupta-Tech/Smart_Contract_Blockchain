@@ -2,37 +2,43 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title FixedRelayerChecked
- * @dev Fixes the vulnerability by explicitly checking the return value and reverting on failure.
+ * @title FixedRelayerConditional
+ * @dev Fixes the vulnerability by using conditional logic to only credit on success.
  */
-contract FixedRelayerChecked {
+contract FixedRelayerConditional {
     mapping(address => uint256) public balances;
 
+    event CallFailed(address indexed target, bytes data);
+    event CallSucceeded(address indexed target);
+
     /**
-     * @notice Executes a call to a target contract and credits the sender.
-     * @dev FIX 1: We capture the boolean return value of .call() and use require()
-     * to enforce that the call must succeed. If it fails, the entire transaction reverts.
+     * @notice Executes a call to a target contract and credits the sender only if successful.
+     * @dev FIX 2: We capture the return value and use an if-statement to control the flow.
+     * This allows the transaction to complete even if the external call fails, but ensures
+     * the user is NOT credited in that case.
      * @param target The address of the contract to call.
      * @param data The calldata to send to the target.
      */
     function executeAndCredit(address target, bytes calldata data) external {
         // ------------------------------------------------------------------------
-        // FIX 1 IMPLEMENTATION
+        // FIX 2 IMPLEMENTATION
         // ------------------------------------------------------------------------
         
-        // Capture the success boolean. We can ignore the return data if not needed.
         (bool success, ) = target.call(data);
-        
-        // Check if the call was successful.
-        // If 'success' is false, the transaction reverts with the message "Call failed".
-        // This ensures that state changes (like crediting balance) only happen if the call succeeded.
-        require(success, "Call failed");
+
+        if (success) {
+            // Only credit the user if the call succeeded
+            balances[msg.sender] += 100;
+            emit CallSucceeded(target);
+        } else {
+            // Handle the failure case (e.g., emit an event, log error)
+            // The transaction does not revert, but the critical state update (balance) is skipped.
+            emit CallFailed(target, data);
+        }
 
         // ------------------------------------------------------------------------
         // END FIX
         // ------------------------------------------------------------------------
-
-        balances[msg.sender] += 100;
     }
 }
 

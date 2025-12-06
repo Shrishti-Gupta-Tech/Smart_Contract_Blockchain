@@ -1,0 +1,17 @@
+{
+  "name": "smart-contract-vulnerability-assignment",
+  "version": "1.0.0",
+  "description": "Analysis of Unchecked Return Values of Low-Level Calls",
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia"
+  },
+  "author": "Student",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0"
+  }
+}
